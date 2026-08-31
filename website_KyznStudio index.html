@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KyznStudio — Game Development</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js">
+    </script>
+    <style>
+        /* ===== RESET & VARIABLES ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --bg-primary: #07070d;
+            --bg-secondary: #0e0e18;
+            --bg-card: #14141f;
+            --bg-card-hover: #1c1c2e;
+            --text-primary: #f0f0ff;
+            --text-secondary: #a8a8c8;
+            --text-muted: #5a5a7a;
+            --accent: #7c3aed;
+            --accent-light: #a78bfa;
+            --accent-dark: #5b21b6;
+            --accent-glow: rgba(124, 58, 237, 0.35);
+            --accent-glow-soft: rgba(124, 58, 237, 0.12);
+            --border-color: #24243a;
+            --border-light: rgba(255, 255, 255, 0.06);
+            --shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+            color: inherit;
+        }
+        img {
+            max-width: 100%;
+            display: block;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(140px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.25;
+        }
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: var(--accent);
+            top: -200px;
+            right: -200px;
+        }
+        .orb-2 {
+            width: 450px;
+            height: 450px;
+            background: #4f46e5;
+            bottom: -150px;
+            left: -150px;
+            opacity: 0.15;
+        }
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: #7c3aed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.08;
+            filter: blur(160px);
+        }
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 14px 0;
+            background: rgba(7, 7, 13, 0.7);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border-light);
+            transition: var(--transition);
+        }
+        header.scrolled {
+            background: rgba(7, 7, 13, 0.92);
+            box-shadow: 0 4px 40px rgba(0, 0, 0, 0.6);
+        }
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+            color: #fff;
+            user-select: none;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            position: relative;
+        }
+        .logo:hover {
+            transform: scale(1.02);
+        }
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(145deg, var(--accent), var(--accent-dark));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #fff;
+            box-shadow: 0 0 40px var(--accent-glow);
+            transition: box-shadow 0.4s ease;
+        }
+        .logo:hover .logo-icon {
+            box-shadow: 0 0 60px var(--accent-glow);
+        }
+        .logo span {
+            background: linear-gradient(135deg, #fff 25%, var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .logo .secret-hint {
+            font-size: 0.55rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+            color: var(--text-muted);
+            -webkit-text-fill-color: var(--text-muted);
+            background: none;
+            letter-spacing: 0.5px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            position: absolute;
+            bottom: -18px;
+            left: 52px;
+        }
+        .logo:hover .secret-hint {
+            opacity: 0.5;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+        .nav-links a {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            position: relative;
+            padding: 4px 0;
+        }
+        .nav-links a:hover {
+            color: #fff;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            transition: var(--transition);
+            border-radius: 2px;
+        }
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            letter-spacing: 0.3px;
+        }
+        .btn-primary {
+            background: linear-gradient(145deg, var(--accent), var(--accent-dark));
+            color: #fff;
+            box-shadow: 0 4px 24px var(--accent-glow);
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px var(--accent-glow);
+        }
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+        .btn-outline {
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+            background: transparent;
+        }
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: #fff;
+            background: var(--accent-glow-soft);
+        }
+        .btn-danger {
+            background: #dc2626;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #16a34a;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #15803d;
+            transform: translateY(-2px);
+        }
+        .btn-sm {
+            padding: 8px 18px;
+            font-size: 0.8rem;
+            gap: 6px;
+        }
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            padding: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .hamburger span {
+            width: 26px;
+            height: 2px;
+            background: #fff;
+            border-radius: 2px;
+            transition: var(--transition);
+        }
+        .hero {
+            padding: 160px 0 90px;
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .hero-content {
+            max-width: 720px;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 20px;
+            border-radius: 50px;
+            background: var(--accent-glow-soft);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            color: var(--accent-light);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 28px;
+            backdrop-filter: blur(4px);
+        }
+        .hero-badge i {
+            font-size: 0.5rem;
+            color: #34d399;
+        }
+        .hero h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 4.2rem;
+            font-weight: 900;
+            line-height: 1.05;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #fff 20%, var(--accent-light) 80%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin-bottom: 40px;
+            line-height: 1.8;
+        }
+        .hero-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .hero-stats {
+            display: flex;
+            gap: 56px;
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border-color);
+        }
+        .hero-stats-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .hero-stats-item .number {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+        .hero-stats-item .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        section {
+            padding: 80px 0;
+            position: relative;
+            z-index: 1;
+        }
+        .section-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .section-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .section-title span {
+            background: linear-gradient(135deg, var(--accent-light), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-top: 4px;
+        }
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+            gap: 32px;
+        }
+        .project-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            position: relative;
+            backdrop-filter: blur(4px);
+        }
+        .project-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent);
+            box-shadow: 0 16px 60px rgba(0, 0, 0, 0.6);
+            background: var(--bg-card-hover);
+        }
+        .project-card-image {
+            width: 100%;
+            height: 210px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--text-muted);
+            position: relative;
+            overflow: hidden;
+        }
+        .project-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+        .project-card:hover .project-card-image img {
+            transform: scale(1.05);
+        }
+        .project-card-image .placeholder-icon {
+            font-size: 4.5rem;
+            color: var(--text-muted);
+            opacity: 0.2;
+        }
+        .project-card-image .status-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            padding: 5px 16px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .status-badge.development {
+            color: #fbbf24;
+            border-color: rgba(251, 191, 36, 0.25);
+        }
+        .status-badge.testing {
+            color: #60a5fa;
+            border-color: rgba(96, 165, 250, 0.25);
+        }
+        .status-badge.released {
+            color: #34d399;
+            border-color: rgba(52, 211, 153, 0.25);
+        }
+        .status-badge.archived {
+            color: #9ca3af;
+            border-color: rgba(156, 163, 175, 0.2);
+        }
+        .project-card-body {
+            padding: 24px 26px 20px;
+        }
+        .project-card-body h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+        }
+        .project-card-body p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .project-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .project-card-footer .tester-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .project-card-footer .tester-link {
+            color: var(--accent-light);
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+            padding: 4px 12px;
+            border-radius: 50px;
+            background: var(--accent-glow-soft);
+            border: 1px solid rgba(124, 58, 237, 0.15);
+        }
+        .project-card-footer .tester-link:hover {
+            background: var(--accent);
+            color: #fff;
+            gap: 10px;
+            border-color: var(--accent);
+        }
+        .project-card-footer .tester-link.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            cursor: default;
+        }
+        .project-card-footer .quota-badge {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.04);
+            padding: 2px 12px;
+            border-radius: 50px;
+            border: 1px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .project-card-footer .quota-badge i {
+            font-size: 0.65rem;
+            color: var(--accent-light);
+        }
+        .project-card-footer .quota-badge.low {
+            color: #fbbf24;
+            border-color: rgba(251, 191, 36, 0.2);
+        }
+        .project-card-footer .quota-badge.empty {
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        .project-card-footer .date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 2px dashed var(--border-color);
+            backdrop-filter: blur(4px);
+        }
+        .empty-state i {
+            font-size: 4.5rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+        .empty-state p {
+            color: var(--text-secondary);
+            max-width: 420px;
+            margin: 0 auto 24px;
+        }
+        .admin-panel {
+            display: none;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            padding: 36px 38px;
+            margin-top: 60px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(8px);
+        }
+        .admin-panel.visible {
+            display: block;
+            animation: fadeUp 0.5s ease;
+        }
+        .admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .admin-header h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .admin-header h2 i {
+            color: var(--accent-light);
+        }
+        .admin-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .admin-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+            margin-bottom: 36px;
+            padding: 28px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+        }
+        .admin-form .full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .form-group label .required {
+            color: #ef4444;
+            font-size: 0.7rem;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: #fff;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow-soft);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .form-group select option {
+            background: var(--bg-secondary);
+        }
+        .form-group .helper {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 14px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .admin-project-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .admin-project-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .admin-project-item:hover {
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+        }
+        .admin-project-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .admin-project-info .thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        .admin-project-info .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .admin-project-info .details h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .admin-project-info .details .meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .admin-project-info .details .meta .status-tag {
+            padding: 1px 12px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .admin-project-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(16px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.visible {
+            display: flex;
+            animation: fadeIn 0.35s ease;
+        }
+        .modal {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            padding: 44px 40px 36px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        .modal h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6rem;
+            text-align: center;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .modal h2 i {
+            color: var(--accent-light);
+        }
+        .modal .sub {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+        .modal .form-group {
+            margin-bottom: 18px;
+        }
+        .modal .form-actions-modal {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 6px;
+        }
+        .modal .form-actions-modal .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .modal .error-msg {
+            color: #ef4444;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 14px;
+            display: none;
+            background: rgba(239, 68, 68, 0.08);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.15);
+        }
+        .modal .error-msg.visible {
+            display: block;
+        }
+        .modal .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            transition: var(--transition);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .modal .close-modal:hover {
+            color: #fff;
+            transform: rotate(90deg);
+        }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 3000;
+            padding: 16px 26px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            color: #fff;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transform: translateY(120px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-width: 440px;
+            backdrop-filter: blur(12px);
+        }
+        .toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast.success {
+            border-color: #16a34a;
+        }
+        .toast.success i {
+            color: #16a34a;
+        }
+        .toast.error {
+            border-color: #dc2626;
+        }
+        .toast.error i {
+            color: #dc2626;
+        }
+        .toast.info {
+            border-color: var(--accent);
+        }
+        .toast.info i {
+            color: var(--accent-light);
+        }
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border-color);
+            position: relative;
+            z-index: 1;
+            margin-top: 40px;
+        }
+        .footer-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .footer-inner p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        .footer-inner p strong {
+            color: var(--text-secondary);
+        }
+        .footer-socials {
+            display: flex;
+            gap: 18px;
+        }
+        .footer-socials a {
+            color: var(--text-muted);
+            transition: var(--transition);
+            font-size: 1.2rem;
+        }
+        .footer-socials a:hover {
+            color: var(--accent-light);
+            transform: translateY(-2px);
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @media (max-width: 992px) {
+            .hero h1 {
+                font-size: 3.2rem;
+            }
+            .admin-form {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            .admin-form .full-width {
+                grid-column: 1;
+            }
+            .form-actions {
+                grid-column: 1;
+            }
+        }
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .hamburger {
+                display: flex;
+            }
+            .nav-links.mobile-open {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 72px;
+                left: 0;
+                right: 0;
+                background: var(--bg-primary);
+                padding: 24px 28px;
+                gap: 16px;
+                border-bottom: 1px solid var(--border-color);
+                box-shadow: var(--shadow);
+                backdrop-filter: blur(16px);
+            }
+            .nav-links.mobile-open a {
+                font-size: 1rem;
+                padding: 8px 0;
+            }
+            .hero {
+                padding: 130px 0 60px;
+                min-height: auto;
+            }
+            .hero h1 {
+                font-size: 2.4rem;
+            }
+            .hero p {
+                font-size: 1rem;
+            }
+            .hero-stats {
+                gap: 28px;
+                flex-wrap: wrap;
+            }
+            .hero-stats-item .number {
+                font-size: 1.6rem;
+            }
+            .section-title {
+                font-size: 1.7rem;
+            }
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+            .admin-panel {
+                padding: 20px 18px;
+            }
+            .admin-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .admin-project-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .admin-project-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .modal {
+                padding: 32px 24px;
+            }
+            .footer-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+            .logo {
+                font-size: 1.3rem;
+            }
+            .logo-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+            }
+            .logo .secret-hint {
+                display: none;
+            }
+        }
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 1.9rem;
+            }
+            .hero-buttons .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            .admin-form {
+                padding: 16px;
+            }
+            .project-card-footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        .sync-status {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            cursor: default;
+        }
+        .sync-status.online {
+            color: #34d399;
+            border-color: rgba(52, 211, 153, 0.2);
+            background: rgba(52, 211, 153, 0.06);
+        }
+        .sync-status.online i {
+            animation: pulseDot 2.4s ease-in-out infinite;
+        }
+        .sync-status.offline {
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.06);
+            cursor: pointer;
+        }
+        .sync-status.offline:hover {
+            background: rgba(239, 68, 68, 0.12);
+        }
+        .sync-status.loading i {
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        .connection-banner {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #fbbf24;
+            background: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.25);
+            border-radius: var(--radius-sm);
+            padding: 12px 18px;
+            margin-bottom: 24px;
+        }
+        .connection-banner.visible {
+            display: flex;
+        }
+        .connection-banner button {
+            color: var(--accent-light);
+            font-weight: 600;
+            text-decoration: underline;
+            flex-shrink: 0;
+        }
+        /* ===== SKELETON LOADER ===== */
+        .skeleton-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        .skeleton-shimmer {
+            background: linear-gradient(100deg, var(--bg-card) 30%, var(--bg-card-hover) 50%, var(--bg-card) 70%);
+            background-size: 200% 100%;
+            animation: shimmer 1.6s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .skeleton-card .skeleton-img {
+            height: 210px;
+        }
+        .skeleton-card .skeleton-line {
+            height: 12px;
+            margin: 18px 26px;
+            border-radius: 6px;
+        }
+        .skeleton-card .skeleton-line.short {
+            width: 55%;
+        }
+        /* ===== SCROLL REVEAL ===== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        .reveal.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* ===== PROJECT CARD POLISH ===== */
+        .project-card-image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 40%, rgba(7, 7, 13, 0.55) 100%);
+            pointer-events: none;
+        }
+        .project-card-body h3 {
+            background: linear-gradient(135deg, #fff, #fff);
+            transition: var(--transition);
+        }
+        .project-card:hover .project-card-body h3 {
+            background: linear-gradient(135deg, #fff, var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .last-synced {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-left: 2px;
+        }
+        @media (max-width: 768px) {
+            .last-synced { display: none; }
+        }
+        /* ===== SEARCH & FILTER ===== */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 36px;
+        }
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-width: 240px;
+            flex: 1;
+            max-width: 340px;
+        }
+        .search-box i.fa-search {
+            position: absolute;
+            left: 18px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 11px 40px 11px 42px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            color: #fff;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow-soft);
+        }
+        .clear-search {
+            position: absolute;
+            right: 14px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding: 4px;
+            transition: var(--transition);
+        }
+        .clear-search:hover {
+            color: #fff;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-tab {
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .filter-tab:hover {
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .filter-tab.active {
+            background: linear-gradient(145deg, var(--accent), var(--accent-dark));
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .no-results i {
+            font-size: 2.5rem;
+            margin-bottom: 14px;
+            opacity: 0.3;
+        }
+        @media (max-width: 600px) {
+            .search-box { max-width: none; }
+        }
+        /* ===== COPY LINK BUTTON (admin list) ===== */
+        .btn-copy-link {
+            position: relative;
+        }
+        .btn-copy-link.copied i {
+            color: #34d399;
+        }
+        /* ===== BACK TO TOP ===== */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: var(--transition);
+            z-index: 900;
+            backdrop-filter: blur(8px);
+        }
+        .back-to-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        .back-to-top:hover {
+            color: #fff;
+            border-color: var(--accent);
+            transform: translateY(-3px);
+        }
+        @media (max-width: 768px) {
+            .back-to-top { left: 20px; bottom: 20px; width: 42px; height: 42px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== ORBS ===== -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- ===== HEADER ===== -->
+    <header id="header">
+        <div class="container header-inner">
+            <div class="logo" id="logoSecret" title="Klik 5x untuk admin">
+                <div class="logo-icon">K</div>
+                <span>KyznStudio</span>
+                <span class="secret-hint">✦ admin</span>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#footer">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <span class="sync-status" id="syncStatus" onclick="retryConnection()" title="Klik untuk sinkron ulang">
+                    <i class="fas fa-cloud"></i> <span id="syncLabel">Menyambung...</span>
+                </span>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-circle"></i> Game Development Studio
+                </div>
+                <h1>Building Worlds,<br />One Pixel at a Time</h1>
+                <p>
+                    KyznStudio adalah rumah bagi para kreator game yang bersemangat.
+                    Kami mengembangkan pengalaman interaktif yang imersif dan tak terlupakan.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#projects" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> Lihat Projects
+                    </a>
+                    <a href="#about" class="btn btn-outline">
+                        <i class="fas fa-info-circle"></i> Tentang Kami
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stats-item">
+                        <span class="number" id="projectCount">0</span>
+                        <span class="label">Total Projects</span>
+                    </div>
+                    <div class="hero-stats-item">
+                        <span class="number" id="devCount">0</span>
+                        <span class="label">Development</span>
+                    </div>
+                    <div class="hero-stats-item">
+                        <span class="number" id="testCount">0</span>
+                        <span class="label">Testing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PROJECTS ===== -->
+    <section id="projects">
+        <div class="container">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Our <span>Projects</span></h2>
+                    <p class="section-subtitle">Game yang sedang dan telah dikembangkan oleh KyznStudio</p>
+                </div>
+            </div>
+            <div class="filter-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Cari nama game..." oninput="applyFilters()" />
+                    <button id="clearSearch" class="clear-search" onclick="clearSearch()" style="display:none;" aria-label="Hapus pencarian">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="filter-tabs" id="filterTabs">
+                    <button class="filter-tab active" data-filter="all" onclick="setFilter('all')">Semua</button>
+                    <button class="filter-tab" data-filter="development" onclick="setFilter('development')">🛠 Dev</button>
+                    <button class="filter-tab" data-filter="testing" onclick="setFilter('testing')">🧪 Testing</button>
+                    <button class="filter-tab" data-filter="released" onclick="setFilter('released')">🚀 Released</button>
+                    <button class="filter-tab" data-filter="archived" onclick="setFilter('archived')">📦 Archived</button>
+                </div>
+            </div>
+            <div class="connection-banner" id="connectionBanner">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span id="connectionBannerText">Tidak bisa terhubung ke server. Menampilkan data tersimpan di perangkat ini.</span>
+                <button onclick="retryConnection()">Coba lagi</button>
+            </div>
+            <div id="projectsGrid" class="projects-grid">
+                <div class="skeleton-card">
+                    <div class="skeleton-img skeleton-shimmer"></div>
+                    <div class="skeleton-line skeleton-shimmer"></div>
+                    <div class="skeleton-line skeleton-shimmer short"></div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton-img skeleton-shimmer"></div>
+                    <div class="skeleton-line skeleton-shimmer"></div>
+                    <div class="skeleton-line skeleton-shimmer short"></div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton-img skeleton-shimmer"></div>
+                    <div class="skeleton-line skeleton-shimmer"></div>
+                    <div class="skeleton-line skeleton-shimmer short"></div>
+                </div>
+            </div>
+            <div id="emptyState" class="empty-state" style="display:none;">
+                <i class="fas fa-gamepad"></i>
+                <h3>Belum Ada Project</h3>
+                <p>
+                    Saat ini belum ada project game yang ditampilkan. Pemilik studio dapat
+                    menambahkan project melalui panel admin.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ABOUT ===== -->
+    <section id="about">
+        <div class="container">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">About <span>KyznStudio</span></h2>
+                    <p class="section-subtitle">Kisah di balik studio game indie ini</p>
+                </div>
+            </div>
+            <div style="max-width: 720px; background: var(--bg-card); padding: 44px 48px; border-radius: var(--radius); border: 1px solid var(--border-color); backdrop-filter: blur(4px);">
+                <p style="color: var(--text-secondary); line-height: 1.9; margin-bottom: 20px;">
+                    KyznStudio adalah studio game indie yang didirikan dengan semangat untuk menciptakan
+                    pengalaman bermain yang unik dan berkesan. Kami percaya bahwa game adalah seni interaktif
+                    yang dapat menghubungkan orang-orang di seluruh dunia.
+                </p>
+                <p style="color: var(--text-secondary); line-height: 1.9;">
+                    Dengan fokus pada kualitas dan inovasi, kami mengembangkan game-game yang tidak hanya
+                    menghibur tetapi juga menginspirasi. Bergabunglah dengan kami dalam perjalanan ini!
+                </p>
+                <div style="margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap;">
+                    <span style="padding: 4px 18px; background: var(--accent-glow-soft); border-radius: 50px; font-size: 0.8rem; color: var(--accent-light); border: 1px solid rgba(124,58,237,0.15);">
+                        <i class="fas fa-code"></i> Unity
+                    </span>
+                    <span style="padding: 4px 18px; background: var(--accent-glow-soft); border-radius: 50px; font-size: 0.8rem; color: var(--accent-light); border: 1px solid rgba(124,58,237,0.15);">
+                        <i class="fas fa-cube"></i> Unreal
+                    </span>
+                    <span style="padding: 4px 18px; background: var(--accent-glow-soft); border-radius: 50px; font-size: 0.8rem; color: var(--accent-light); border: 1px solid rgba(124,58,237,0.15);">
+                        <i class="fas fa-paint-brush"></i> Blender
+                    </span>
+                    <span style="padding: 4px 18px; background: var(--accent-glow-soft); border-radius: 50px; font-size: 0.8rem; color: var(--accent-light); border: 1px solid rgba(124,58,237,0.15);">
+                        <i class="fas fa-music"></i> FMOD
+                    </span>
+                    <span style="padding: 4px 18px; background: var(--accent-glow-soft); border-radius: 50px; font-size: 0.8rem; color: var(--accent-light); border: 1px solid rgba(124,58,237,0.15);">
+                        <i class="fas fa-users"></i> Multiplayer
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ADMIN PANEL ===== -->
+    <section id="adminSection">
+        <div class="container">
+            <div id="adminPanel" class="admin-panel">
+                <div class="admin-header">
+                    <h2><i class="fas fa-crown"></i> Admin Dashboard</h2>
+                    <div class="admin-actions">
+                        <button class="btn btn-outline btn-sm" onclick="logoutAdmin()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="toggleAdminPanel(false)">
+                            <i class="fas fa-times"></i> Tutup
+                        </button>
+                    </div>
+                </div>
+
+                <form id="projectForm" class="admin-form" onsubmit="saveProject(event)">
+                    <input type="hidden" id="editId" value="" />
+                    <div class="form-group full-width">
+                        <label>Nama Project <span class="required">*</span></label>
+                        <input type="text" id="projectName" placeholder="Contoh: Shadow Quest" required />
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Deskripsi</label>
+                        <textarea id="projectDesc" placeholder="Ceritakan tentang game ini..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>URL Gambar</label>
+                        <input type="url" id="projectImage" placeholder="https://example.com/gambar.jpg" />
+                        <span class="helper">Kosongkan untuk ikon default</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="projectStatus">
+                            <option value="development">🛠 Development</option>
+                            <option value="testing">🧪 Testing</option>
+                            <option value="released">🚀 Released</option>
+                            <option value="archived">📦 Archived</option>
+                        </select>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Link Tester <span class="required">*</span></label>
+                        <input type="url" id="projectTester" placeholder="https://tester-link.com/shadow-quest" required />
+                        <span class="helper">URL untuk playtest / akses game</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Kuota Tester <span class="required">*</span></label>
+                        <input type="number" id="projectQuota" placeholder="100" min="1" value="50" required />
+                        <span class="helper">Total slot tester</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Kuota Terpakai</label>
+                        <input type="number" id="projectUsed" placeholder="0" min="0" value="0" />
+                        <span class="helper">Jumlah tester sudah menggunakan</span>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="formSubmitBtn">
+                            <i class="fas fa-save"></i> Simpan Project
+                        </button>
+                        <button type="button" class="btn btn-outline" onclick="resetForm()">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
+                    </div>
+                </form>
+
+                <div style="margin-top: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+                        <h3 style="font-size: 1rem; font-weight: 600; color: var(--text-secondary);">
+                            <i class="fas fa-list"></i> Daftar Project
+                        </h3>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);" id="adminProjectCount">0 project</span>
+                    </div>
+                    <div id="adminProjectList" class="admin-project-list"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer id="footer">
+        <div class="container footer-inner">
+            <p>&copy; 2026 <strong>KyznStudio</strong> — Built with <i class="fas fa-heart" style="color: #ef4444;"></i> for gamers.</p>
+            <div class="footer-socials">
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                <a href="#" aria-label="Discord"><i class="fab fa-discord"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===== LOGIN MODAL ===== -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <button class="close-modal" onclick="closeLoginModal()">&times;</button>
+            <h2><i class="fas fa-crown"></i> Admin Login</h2>
+            <p class="sub">Masuk untuk mengelola project KyznStudio</p>
+            <form onsubmit="loginAdmin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginUser" placeholder="admin@kyznstudio.com" autocomplete="username" required />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" required />
+                </div>
+                <div class="form-actions-modal">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Masuk
+                    </button>
+                </div>
+                <div class="error-msg" id="loginError">
+                    <i class="fas fa-exclamation-circle"></i> <span>Email atau password salah!</span>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== BACK TO TOP ===== -->
+    <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Kembali ke atas">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <!-- ===== TOAST ===== -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Berhasil!</span>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT — Firebase Realtime Database (Global)
+    ============================================================ -->
+    <script>
+        // ============================================================
+        //  KONFIGURASI FIREBASE (gunakan database milik Anda)
+        // ------------------------------------------------------------
+        //  PENTING: config di bawah ini HARUS berasal dari project
+        //  Firebase milik Anda sendiri (gratis di console.firebase.google.com)
+        //  agar data admin benar-benar tersimpan di server dan muncul
+        //  di semua perangkat/browser. Langkah singkat:
+        //   1. Buat project baru di Firebase Console
+        //   2. Buka menu "Realtime Database" → Create Database
+        //   3. Buka tab Rules, untuk tahap awal bisa pakai:
+        //        { "rules": { ".read": true, ".write": true } }
+        //      (nanti perketat lagi kalau sudah siap production)
+        //   4. Buka Project Settings → General → scroll ke "Your apps"
+        //      → tambah Web App → salin objek firebaseConfig ke sini
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJtT5h2VW9hvom62sAfi_-yYCr8JZm0ag",
+            authDomain: "kyuhyun-cd798.firebaseapp.com",
+            databaseURL: "https://kyuhyun-cd798-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "kyuhyun-cd798",
+            storageBucket: "kyuhyun-cd798.firebasestorage.app",
+            messagingSenderId: "71881383849",
+            appId: "1:71881383849:web:6b1dfe347129bdb5d02eb8"
+        };
+
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+        const projectsRef = database.ref('projects');
+
+        // ============================================================
+        //  STATE
+        // ============================================================
+        let projects = [];
+        let isAdmin = false;
+        let loginClickCount = 0;
+        let loginClickTimer = null;
+        let isSaving = false;
+
+        // ============================================================
+        //  LOAD / SAVE dari Firebase
+        // ============================================================
+        let hasLoadedOnce = false;
+
+        function loadProjectsFromFirebase() {
+            setSyncStatus('loading');
+            // Lepas listener lama dulu supaya tidak dobel saat retry/reconnect
+            projectsRef.off('value');
+            projectsRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const projectArray = Object.keys(data).map(key => ({
+                        id: key,
+                        ...data[key]
+                    }));
+                    projects = projectArray;
+                } else {
+                    projects = [];
+                }
+                // Default fields
+                projects.forEach(p => {
+                    if (p.testerQuota === undefined) p.testerQuota = 50;
+                    if (p.testerUsed === undefined) p.testerUsed = 0;
+                    if (p.visible === undefined) p.visible = true;
+                    if (!p.createdAt) p.createdAt = new Date().toISOString();
+                });
+                renderAll();
+                setSyncStatus('online');
+                if (!hasLoadedOnce) {
+                    showToast('Terhubung ke server — data tersinkron di semua perangkat', 'success');
+                    hasLoadedOnce = true;
+                } else {
+                    showToast('Data diperbarui dari server', 'info');
+                }
+            }, (error) => {
+                setSyncStatus('offline');
+                showToast('Gagal terhubung ke server: ' + error.message, 'error');
+                // Coba load dari localStorage cache milik perangkat ini
+                loadFromLocalCache();
+            });
+        }
+
+        function saveProjectsToFirebase() {
+            if (isSaving) return;
+            isSaving = true;
+            setSyncStatus('loading');
+
+            const dataToSave = {};
+            projects.forEach(p => {
+                dataToSave[p.id] = {
+                    name: p.name,
+                    description: p.description || '',
+                    image: p.image || '',
+                    status: p.status || 'development',
+                    testerLink: p.testerLink || '',
+                    testerQuota: p.testerQuota || 0,
+                    testerUsed: p.testerUsed || 0,
+                    visible: p.visible !== false,
+                    createdAt: p.createdAt || new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+            });
+
+            projectsRef.set(dataToSave)
+                .then(() => {
+                    isSaving = false;
+                    setSyncStatus('online');
+                    saveToLocalCache();
+                })
+                .catch((error) => {
+                    isSaving = false;
+                    setSyncStatus('offline');
+                    showToast('Gagal menyimpan ke server: ' + error.message, 'error');
+                    saveToLocalCache();
+                });
+        }
+
+        // ============================================================
+        //  LOCAL CACHE (cadangan)
+        // ============================================================
+        function saveToLocalCache() {
+            try {
+                localStorage.setItem('kyznstudio_cache', JSON.stringify(projects));
+            } catch (e) {}
+        }
+
+        function loadFromLocalCache() {
+            try {
+                const data = localStorage.getItem('kyznstudio_cache');
+                if (data) {
+                    projects = JSON.parse(data);
+                    renderAll();
+                    showToast('Memuat data dari cache lokal perangkat ini', 'info');
+                }
+            } catch (e) {}
+            setSyncStatus('offline');
+        }
+
+        // ============================================================
+        //  SYNC STATUS UI
+        // ============================================================
+        let lastSyncedAt = null;
+
+        function setSyncStatus(state) {
+            const el = document.getElementById('syncStatus');
+            const label = document.getElementById('syncLabel');
+            const banner = document.getElementById('connectionBanner');
+            el.className = 'sync-status';
+
+            if (state === 'online') {
+                el.classList.add('online');
+                lastSyncedAt = new Date();
+                label.innerHTML = 'Online <span class="last-synced">· ' + formatTime(lastSyncedAt) + '</span>';
+                el.querySelector('i').className = 'fas fa-cloud';
+                el.title = 'Data tersinkron ke semua perangkat';
+                banner.classList.remove('visible');
+            } else if (state === 'offline') {
+                el.classList.add('offline');
+                label.textContent = 'Offline — klik untuk coba lagi';
+                el.querySelector('i').className = 'fas fa-cloud-slash';
+                el.title = 'Klik untuk sinkron ulang ke server';
+                banner.classList.add('visible');
+            } else {
+                el.classList.add('loading');
+                label.textContent = 'Menyambungkan...';
+                el.querySelector('i').className = 'fas fa-rotate';
+                el.title = 'Sedang menyambung ke server';
+            }
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function retryConnection() {
+            showToast('Mencoba menyambung ulang ke server...', 'info');
+            loadProjectsFromFirebase();
+        }
+
+        // Otomatis coba sambung ulang saat koneksi internet perangkat kembali
+        window.addEventListener('online', retryConnection);
+
+        // ============================================================
+        //  RENDER
+        // ============================================================
+        // ============================================================
+        //  SEARCH & FILTER (halaman publik)
+        // ============================================================
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            renderProjects();
+        }
+
+        function applyFilters() {
+            currentSearch = document.getElementById('searchInput').value.trim().toLowerCase();
+            document.getElementById('clearSearch').style.display = currentSearch ? 'block' : 'none';
+            renderProjects();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            currentSearch = '';
+            document.getElementById('clearSearch').style.display = 'none';
+            renderProjects();
+        }
+
+        function renderAll() {
+            renderProjects();
+            renderAdminList();
+            updateStats();
+            updateAdminCount();
+            checkEmptyState();
+            saveToLocalCache();
+        }
+
+        function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+            const allVisible = projects.filter(p => p.visible !== false);
+
+            if (allVisible.length === 0) {
+                grid.innerHTML = '';
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+
+            const visible = allVisible.filter(p => {
+                const matchFilter = currentFilter === 'all' || p.status === currentFilter;
+                const matchSearch = !currentSearch ||
+                    p.name.toLowerCase().includes(currentSearch) ||
+                    (p.description || '').toLowerCase().includes(currentSearch);
+                return matchFilter && matchSearch;
+            });
+
+            if (visible.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-magnifying-glass"></i>
+                        <p>Tidak ada project yang cocok dengan pencarian/filter ini.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = visible.map((p, index) => {
+                const statusMap = {
+                    development: { label: '🛠 Development', cls: 'development' },
+                    testing: { label: '🧪 Testing', cls: 'testing' },
+                    released: { label: '🚀 Released', cls: 'released' },
+                    archived: { label: '📦 Archived', cls: 'archived' },
+                };
+                const st = statusMap[p.status] || statusMap.development;
+
+                const imageContent = p.image ?
+                    `<img src="${p.image}" alt="${p.name}" loading="lazy" />` :
+                    `<span class="placeholder-icon"><i class="fas fa-gamepad"></i></span>`;
+
+                const quota = p.testerQuota || 0;
+                const used = p.testerUsed || 0;
+                const remaining = Math.max(0, quota - used);
+                const hasQuota = quota > 0;
+                const isAvailable = remaining > 0;
+
+                let quotaHtml = '';
+                if (hasQuota) {
+                    let cls = '';
+                    if (remaining === 0) cls = 'empty';
+                    else if (remaining <= Math.ceil(quota * 0.2)) cls = 'low';
+                    quotaHtml = `<span class="quota-badge ${cls}">
+                            <i class="fas fa-user"></i> ${remaining} / ${quota} slot
+                        </span>`;
+                }
+
+                const testerHtml = p.testerLink ? `
+                        <a href="${p.testerLink}" target="_blank" 
+                           class="tester-link ${!isAvailable ? 'disabled' : ''}"
+                           onclick="${!isAvailable ? 'event.preventDefault(); showToast(\'Kuota tester sudah habis!\', \'error\');' : ''}">
+                            <i class="fas fa-external-link-alt"></i> Test Game
+                        </a>
+                    ` : `<span style="color: var(--text-muted); font-size: 0.8rem;">No link</span>`;
+
+                const date = p.createdAt ? new Date(p.createdAt).toLocaleDateString('id-ID', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }) : '';
+
+                return `
+                        <div class="project-card" style="animation: fadeUp 0.45s ease ${index * 0.06}s both;">
+                            <div class="project-card-image">
+                                ${imageContent}
+                                <span class="status-badge ${st.cls}">${st.label}</span>
+                            </div>
+                            <div class="project-card-body">
+                                <h3>${escapeHtml(p.name)}</h3>
+                                <p>${escapeHtml(p.description || 'Tidak ada deskripsi.')}</p>
+                                <div class="project-card-footer">
+                                    <div class="tester-section">
+                                        ${testerHtml}
+                                        ${quotaHtml}
+                                    </div>
+                                    ${date ? `<span class="date"><i class="far fa-calendar-alt"></i> ${date}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            }).join('');
+        }
+
+        function renderAdminList() {
+            const container = document.getElementById('adminProjectList');
+            if (projects.length === 0) {
+                container.innerHTML = `
+                        <div style="text-align: center; padding: 36px 20px; color: var(--text-muted);">
+                            <i class="fas fa-inbox" style="font-size: 2.2rem; margin-bottom: 14px; display: block; opacity: 0.3;"></i>
+                            Belum ada project. Tambahkan project baru di atas!
+                        </div>
+                    `;
+                return;
+            }
+
+            container.innerHTML = projects.map((p) => {
+                const statusMap = {
+                    development: { label: '🛠 Dev', cls: 'development' },
+                    testing: { label: '🧪 Test', cls: 'testing' },
+                    released: { label: '🚀 Released', cls: 'released' },
+                    archived: { label: '📦 Archived', cls: 'archived' },
+                };
+                const st = statusMap[p.status] || statusMap.development;
+                const thumbContent = p.image ?
+                    `<img src="${p.image}" alt="${p.name}" />` :
+                    `<i class="fas fa-gamepad"></i>`;
+
+                const quotaInfo = `Kuota: ${p.testerUsed || 0}/${p.testerQuota || 0}`;
+
+                return `
+                        <div class="admin-project-item">
+                            <div class="admin-project-info">
+                                <div class="thumb">${thumbContent}</div>
+                                <div class="details">
+                                    <h4>${escapeHtml(p.name)}</h4>
+                                    <div class="meta">
+                                        <span class="status-tag ${st.cls}">${st.label}</span>
+                                        <span><i class="fas fa-users"></i> ${quotaInfo}</span>
+                                        ${p.testerLink ? `<span><i class="fas fa-link"></i> Tersedia</span>` : `<span style="opacity:0.4;"><i class="fas fa-link"></i> No link</span>`}
+                                        ${p.visible === false ? `<span style="color: var(--text-muted);"><i class="fas fa-eye-slash"></i> Hidden</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="admin-project-actions">
+                                ${p.testerLink ? `
+                                <button class="btn btn-outline btn-sm btn-copy-link" onclick="copyTesterLink('${p.id}', this)" title="Salin link tester">
+                                    <i class="fas fa-copy"></i>
+                                </button>` : ''}
+                                <button class="btn btn-outline btn-sm" onclick="editProject('${p.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline btn-sm" onclick="toggleVisibility('${p.id}')">
+                                    <i class="fas ${p.visible === false ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+            }).join('');
+        }
+
+        function copyTesterLink(id, btnEl) {
+            const p = projects.find(proj => proj.id === id);
+            if (!p || !p.testerLink) return;
+            navigator.clipboard.writeText(p.testerLink).then(() => {
+                showToast('Link tester disalin!', 'success');
+                if (btnEl) {
+                    btnEl.classList.add('copied');
+                    const icon = btnEl.querySelector('i');
+                    icon.className = 'fas fa-check';
+                    setTimeout(() => {
+                        icon.className = 'fas fa-copy';
+                        btnEl.classList.remove('copied');
+                    }, 1500);
+                }
+            }).catch(() => {
+                showToast('Gagal menyalin link.', 'error');
+            });
+        }
+
+        function updateStats() {
+            const visible = projects.filter(p => p.visible !== false);
+            const dev = visible.filter(p => p.status === 'development');
+            const test = visible.filter(p => p.status === 'testing');
+            document.getElementById('projectCount').textContent = visible.length;
+            document.getElementById('devCount').textContent = dev.length;
+            document.getElementById('testCount').textContent = test.length;
+        }
+
+        function updateAdminCount() {
+            document.getElementById('adminProjectCount').textContent = `${projects.length} project`;
+        }
+
+        function checkEmptyState() {
+            const visible = projects.filter(p => p.visible !== false);
+            const grid = document.getElementById('projectsGrid');
+            const empty = document.getElementById('emptyState');
+            if (visible.length === 0) {
+                grid.innerHTML = '';
+                empty.style.display = 'block';
+            } else {
+                empty.style.display = 'none';
+            }
+        }
+
+        // ============================================================
+        //  CRUD
+        // ============================================================
+        function saveProject(e) {
+            e.preventDefault();
+            if (!isAdmin) {
+                showToast('Anda harus login sebagai admin!', 'error');
+                return;
+            }
+
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('projectName').value.trim();
+            const description = document.getElementById('projectDesc').value.trim();
+            const image = document.getElementById('projectImage').value.trim();
+            const status = document.getElementById('projectStatus').value;
+            const testerLink = document.getElementById('projectTester').value.trim();
+            const testerQuota = parseInt(document.getElementById('projectQuota').value) || 0;
+            const testerUsed = parseInt(document.getElementById('projectUsed').value) || 0;
+
+            if (!name) {
+                showToast('Nama project wajib diisi!', 'error');
+                return;
+            }
+            if (!testerLink) {
+                showToast('Link tester wajib diisi!', 'error');
+                return;
+            }
+            if (testerUsed > testerQuota) {
+                showToast('Kuota terpakai tidak boleh melebihi kuota total!', 'error');
+                return;
+            }
+
+            const projectData = {
+                name,
+                description: description || '',
+                image: image || '',
+                status,
+                testerLink,
+                testerQuota,
+                testerUsed,
+                visible: true,
+                updatedAt: new Date().toISOString(),
+            };
+
+            if (id) {
+                const index = projects.findIndex(p => p.id === id);
+                if (index !== -1) {
+                    projects[index] = { ...projects[index], ...projectData };
+                    showToast('Project berhasil diperbarui!', 'success');
+                }
+            } else {
+                const newProject = {
+                    ...projectData,
+                    id: 'proj_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                    createdAt: new Date().toISOString(),
+                };
+                projects.push(newProject);
+                showToast('Project berhasil ditambahkan!', 'success');
+            }
+
+            saveProjectsToFirebase();
+            resetForm();
+            renderAll();
+        }
+
+        function editProject(id) {
+            const p = projects.find(proj => proj.id === id);
+            if (!p) return;
+
+            document.getElementById('editId').value = p.id;
+            document.getElementById('projectName').value = p.name;
+            document.getElementById('projectDesc').value = p.description || '';
+            document.getElementById('projectImage').value = p.image || '';
+            document.getElementById('projectStatus').value = p.status || 'development';
+            document.getElementById('projectTester').value = p.testerLink || '';
+            document.getElementById('projectQuota').value = p.testerQuota || 50;
+            document.getElementById('projectUsed').value = p.testerUsed || 0;
+            document.getElementById('formSubmitBtn').innerHTML = '<i class="fas fa-sync-alt"></i> Update Project';
+
+            document.querySelector('.admin-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function deleteProject(id) {
+            if (!isAdmin) {
+                showToast('Anda harus login sebagai admin!', 'error');
+                return;
+            }
+            if (!confirm('Yakin ingin menghapus project ini?')) return;
+            projects = projects.filter(p => p.id !== id);
+            saveProjectsToFirebase();
+            showToast('Project dihapus.', 'info');
+            renderAll();
+        }
+
+        function toggleVisibility(id) {
+            if (!isAdmin) {
+                showToast('Anda harus login sebagai admin!', 'error');
+                return;
+            }
+            const p = projects.find(proj => proj.id === id);
+            if (p) {
+                p.visible = p.visible === false ? true : false;
+                saveProjectsToFirebase();
+                showToast(`Project ${p.visible ? 'ditampilkan' : 'disembunyikan'}.`, 'info');
+                renderAll();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('editId').value = '';
+            document.getElementById('projectName').value = '';
+            document.getElementById('projectDesc').value = '';
+            document.getElementById('projectImage').value = '';
+            document.getElementById('projectStatus').value = 'development';
+            document.getElementById('projectTester').value = '';
+            document.getElementById('projectQuota').value = '50';
+            document.getElementById('projectUsed').value = '0';
+            document.getElementById('formSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Simpan Project';
+        }
+
+        // ============================================================
+        //  ADMIN AUTH
+        // ============================================================
+        document.getElementById('logoSecret').addEventListener('click', function(e) {
+            loginClickCount++;
+            clearTimeout(loginClickTimer);
+            loginClickTimer = setTimeout(() => { loginClickCount = 0; }, 800);
+
+            if (loginClickCount >= 5) {
+                loginClickCount = 0;
+                if (isAdmin) {
+                    toggleAdminPanel(true);
+                } else {
+                    document.getElementById('loginModal').classList.add('visible');
+                }
+                showToast('🔑 Akses admin dibuka', 'info');
+            }
+        });
+
+        function loginAdmin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginUser').value.trim();
+            const password = document.getElementById('loginPass').value.trim();
+            const errorEl = document.getElementById('loginError');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+
+            errorEl.classList.remove('visible');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memeriksa...';
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    // isAdmin di-set otomatis lewat onAuthStateChanged
+                    document.getElementById('loginPass').value = '';
+                    closeLoginModal();
+                })
+                .catch((error) => {
+                    let msg = 'Login gagal! Periksa email dan password.';
+                    if (error.code === 'auth/too-many-requests') {
+                        msg = 'Terlalu banyak percobaan gagal. Coba lagi beberapa saat lagi.';
+                    } else if (error.code === 'auth/invalid-email') {
+                        msg = 'Format email tidak valid.';
+                    }
+                    errorEl.querySelector('span').textContent = msg;
+                    errorEl.classList.add('visible');
+                    showToast(msg, 'error');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk';
+                });
+        }
+
+        function logoutAdmin() {
+            auth.signOut().then(() => {
+                showToast('Anda telah logout.', 'info');
+                resetForm();
+            });
+        }
+
+        // ============================================================
+        //  SESI ADMIN — dikelola sepenuhnya oleh Firebase Authentication
+        //  (bukan sessionStorage/localStorage), jadi tidak bisa dipalsukan
+        //  lewat console browser. Token sesi diverifikasi oleh Firebase.
+        // ============================================================
+        auth.onAuthStateChanged((user) => {
+            isAdmin = !!user;
+            const panel = document.getElementById('adminPanel');
+            if (isAdmin) {
+                showToast(`Selamat datang, ${user.email}!`, 'success');
+                toggleAdminPanel(true);
+            } else {
+                panel.classList.remove('visible');
+            }
+        });
+
+        function toggleAdminPanel(forceState) {
+            const panel = document.getElementById('adminPanel');
+            const shouldShow = forceState !== undefined ? forceState : !panel.classList.contains('visible');
+
+            if (shouldShow && !isAdmin) {
+                document.getElementById('loginModal').classList.add('visible');
+                return;
+            }
+
+            if (shouldShow) {
+                panel.classList.add('visible');
+                document.getElementById('adminSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                renderAdminList();
+            } else {
+                panel.classList.remove('visible');
+            }
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.remove('visible');
+            document.getElementById('loginError').classList.remove('visible');
+        }
+
+        // ============================================================
+        //  TOAST
+        // ============================================================
+        let toastTimeout;
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toastMessage');
+            const icon = toast.querySelector('i');
+
+            msgEl.textContent = message;
+            toast.className = 'toast ' + type;
+
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                info: 'fa-info-circle',
+            };
+            icon.className = 'fas ' + (icons[type] || icons.info);
+
+            clearTimeout(toastTimeout);
+            toast.classList.add('visible');
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 3800);
+        }
+
+        // ============================================================
+        //  UTILITY
+        // ============================================================
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================================
+        //  MOBILE HAMBURGER
+        // ============================================================
+        document.getElementById('hamburger').addEventListener('click', function() {
+            document.getElementById('navLinks').classList.toggle('mobile-open');
+        });
+        document.querySelectorAll('#navLinks a').forEach(el => {
+            el.addEventListener('click', () => {
+                document.getElementById('navLinks').classList.remove('mobile-open');
+            });
+        });
+
+        // ============================================================
+        //  HEADER SCROLL
+        // ============================================================
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            header.classList.toggle('scrolled', window.scrollY > 20);
+            document.getElementById('backToTop').classList.toggle('visible', window.scrollY > 500);
+        });
+
+        // ============================================================
+        //  INIT
+        // ============================================================
+        // Sesi admin dipulihkan otomatis oleh auth.onAuthStateChanged() di atas
+
+        // Load data dari Firebase
+        loadProjectsFromFirebase();
+
+        // ESC to close modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeLoginModal();
+                document.getElementById('adminPanel').classList.remove('visible');
+            }
+        });
+
+        document.getElementById('loginModal').addEventListener('click', function(e) {
+            if (e.target === this) closeLoginModal();
+        });
+
+        console.log('🚀 KyznStudio dengan Firebase Realtime Database (Global)');
+        console.log('🔑 Klik logo 5x untuk membuka admin.');
+        console.log('👤 Login pakai akun Firebase Authentication yang sudah didaftarkan.');
+        console.log('☁️ Data tersimpan di cloud (Firebase), bisa diakses semua perangkat & browser.');
+        console.log('⚠️ Catatan: pastikan firebaseConfig di atas sudah diisi dengan project Firebase Anda sendiri.');
+    </script>
+
+</body>
+</html>
